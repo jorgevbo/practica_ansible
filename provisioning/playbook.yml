@@ -4,10 +4,53 @@
   tasks:
   - name: Comprobar conexion
     ping:
+  # PHP
   - name: Agregar repositorio PPA para PHP
     apt_repository: repo='ppa:ondrej/php'
   - name: Actualizar cache de APT
     apt: update_cache=yes cache_valid_time=3600
   - name: Instalar PHP
-    apt: name=php state=installed
-  
+    apt: name={{item}} state=installed
+    with_items:
+    - php
+    - php-fpm
+    - php-mysql
+    - php-xml
+  - name: Remove Apache2
+    apt: name=apache2 state=removed
+  # MySQL
+  - name: Instalar MYSQL
+    apt: name={{item}}
+    with_items:
+    - mysql-server-5.6
+    - python-mysqldb
+  - name: Generar nueva contraseña para root de MySQL
+    command: openssl rand -hex 7 creates=/root/.my.cnf
+    register: mysql_new_root_pass
+  - name: Quitar usuario anonimo
+    mysql_user: name="" state=absent
+    when: mysql_new_root_pass.changed
+  - name: Eliminar base de datos de prueba
+    mysql_db: name=test state=absent
+    when: mysql_new_root_pass.changed
+  - name: Mostrar la nueva contraseña del usuario root
+    debug: msg="Nueva contraseña de root es {{mysql_new_root_pass.stdout}}"
+    when: mysql_new_root_pass.changed
+  - name: Actualizar contraseña de usuario root
+    mysql_user: name=root host={{item}} password={{mysql_new_root_pass.stdout}}
+    with_items:
+    - "{{ansible_hostname}}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+    when: mysql_new_root_pass.changed
+  - name: Crear my.cnf
+    template: src=templates/mysql/my.cnf dest=/root/.my.cnf
+    when: mysql_new_root_pass.changed
+  # NginX
+  - name: Instalar NginX
+    apt: name=nginx state=installed
+  - name: Iniciar NginX
+    service: name=nginx state=running
+  - name: Crear archivo de configuración de NginX
+    template: src=templates/nginx/default dest=/etc/nginx/sitesavailable/default

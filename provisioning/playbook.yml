@@ -1,0 +1,13 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Comprobar conexion
+    ping:
+  - name: Agregar repositorio PPA para PHP
+    apt_repository: repo='ppa:ondrej/php'
+  - name: Actualizar cache de APT
+    apt: update_cache=yes cache_valid_time=3600
+  - name: Instalar PHP
+    apt: name=php state=installed
+  

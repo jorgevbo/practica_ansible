@@ -1,6 +1,11 @@
 ---
 - hosts: all
   become: true
+  roles:
+  - proyej.php
+  - proyej.nginx
+  - proyej.mysql
+  - proyej.wordpress
   tasks:
   - name: Comprobar conexion
     ping:

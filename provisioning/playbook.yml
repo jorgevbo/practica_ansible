@@ -2,4 +2,7 @@
 - hosts: all
   become: true
   roles:
-  - proyej.wordpress
+  - role: proyej.wordpress
+    database_name: jorgewp
+    database_user: jorgewp
+    database_password: bananas98765

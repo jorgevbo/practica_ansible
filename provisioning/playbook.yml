@@ -6,3 +6,6 @@
     database_name: jorgewp
     database_user: jorgewp
     database_password: bananas98765
+    wp_domain: book.example.com
+    initial_post_title: Hola que tal
+    initial_post_content: Esto es un ejemplo de post. Cambialo por algo interesante

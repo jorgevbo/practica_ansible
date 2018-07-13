@@ -8,15 +8,15 @@
 - name: unzip Wordpress
   unarchive: src=/tmp/wordpress.zip dest=/tmp copy=no creates=/tmp/wordpress/wp-settings.php
 - name: Crear carpeta del proyecto
-  file: dest=/var/www/book.example.com state=directory
+  file: dest=/var/www/{{wp_domain}} state=directory
 - name: Copiar los archivos de Wordpress
-  command: cp -a /tmp/wordpress/. /var/www/book.example.com creates=/var/www/book.example.com/wp-settings.php
+  command: cp -a /tmp/wordpress/. /var/www/{{wp_domain}} creates=/var/www/{{wp_domain}}/wp-settings.php
 - name: Crear base de datos Wordpress
   mysql_db: name={{database_name}} state=present
 - name: Crear el usuario de DB para wordpress
   mysql_user: name={{database_user}} host=localhost password={{database_password}} priv={{database_name}}.*:ALL
 - name: crear wp-config
-  template: src=wp-config.php dest=/var/www/book.example.com/wp-config.php
+  template: src=wp-config.php dest=/var/www/{{wp_domain}}/wp-config.php
 # Backups de la base de datos
 - name: Existe la base de datos?
   command: mysql -u root {{database_name}} -e "SELECT ID FROM {{database_name}}.wp_users LIMIT 1;"
@@ -24,7 +24,7 @@
   ignore_errors: true
   changed_when: false
 - name: Copiar la DB Wordpress
-  copy: src=wp-database.sql dest=/tmp/wp-database.sql
+  template: src=wp-database.sql dest=/tmp/wp-database.sql
   when: db_exist.rc > 0
 - name: Importar la DB Wordpress
   mysql_db: target=/tmp/wp-database.sql state=import name={{database_name}}

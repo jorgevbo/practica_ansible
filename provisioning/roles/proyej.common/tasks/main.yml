@@ -1,0 +1,6 @@
+---
+# tasks file for proyej.common
+- name: Instalar herramientas requeridas
+  apt: name={{item}} state=installed
+  with_items:
+  - unzip

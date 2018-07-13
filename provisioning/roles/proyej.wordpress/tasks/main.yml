@@ -1,2 +1,31 @@
 ---
 # tasks file for proyej.wordpress
+- name: Obtener el checksum de Wordpress
+  uri: url=https://wordpress.org/latest.zip.sha1 return_content=true
+  register: wp_checksum
+- name: Descargar wordpress
+  get_url: url=https://wordpress.org/latest.zip dest=/tmp/wordpress.zip checksum="sha1:{{wp_checksum.content}}"
+- name: unzip Wordpress
+  unarchive: src=/tmp/wordpress.zip dest=/tmp copy=no creates=/tmp/wordpress/wp-settings.php
+- name: Crear carpeta del proyecto
+  file: dest=/var/www/book.example.com state=directory
+- name: Copiar los archivos de Wordpress
+  command: cp -a /tmp/wordpress/. /var/www/book.example.com creates=/var/www/book.example.com/wp-settings.php
+- name: Crear base de datos Wordpress
+  mysql_db: name=wordpress state=present
+- name: Crear el usuario de DB para wordpress
+  mysql_user: name=wordpress host=localhost password=bananas priv=wordpress.*:ALL
+- name: crear wp-config
+  template: src=wp-config.php dest=/var/www/book.example.com/wp-config.php
+# Backups de la base de datos
+- name: Existe la base de datos?
+  command: mysql -u root wordpress -e "SELECT ID FROM wordpress.wp_users LIMIT 1;"
+  register: db_exist
+  ignore_errors: true
+  changed_when: false
+- name: Copiar la DB Wordpress
+  copy: src=wp-database.sql dest=/tmp/wp-database.sql
+  when: db_exist.rc > 0
+- name: Importar la DB Wordpress
+  mysql_db: target=/tmp/wp-database.sql state=import name=wordpress
+  when: db_exist.rc > 0

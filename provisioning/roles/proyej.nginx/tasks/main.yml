@@ -1,2 +1,9 @@
 ---
 # tasks file for proyej.nginx
+- name: Instalar NginX
+  apt: name=nginx state=installed
+- name: Iniciar NginX
+  service: name=nginx state=running
+- name: Crear archivo de configuración de NginX
+  template: src=default dest=/etc/nginx/sites-available/default
+  notify: restart nginx
